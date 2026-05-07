@@ -3,22 +3,37 @@ use opentelemetry::{
     KeyValue,
     global::{self},
 };
+use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::{Resource, metrics::SdkMeterProvider};
-use opentelemetry_semantic_conventions::metric;
+use opentelemetry_semantic_conventions::{metric, resource};
 use std::{
     sync::{Arc, atomic::AtomicBool},
     time::{Duration, Instant},
 };
 
 fn init_meter_provider() -> opentelemetry_sdk::metrics::SdkMeterProvider {
-    let exporter = opentelemetry_stdout::MetricExporter::default();
+    let exporter = opentelemetry_otlp::MetricExporter::builder()
+        .with_http()
+        .with_endpoint("http://localhost:4318/v1/metrics")
+        .build()
+        .unwrap();
 
+    let stdout_exporter = opentelemetry_stdout::MetricExporter::default();
     let provider = SdkMeterProvider::builder()
         .with_periodic_exporter(exporter)
+        .with_periodic_exporter(stdout_exporter)
         .with_resource(
             Resource::builder()
                 .with_service_name("pgprism")
                 .with_attribute(KeyValue::new("service.version", env!("CARGO_PKG_VERSION")))
+                .with_attribute(KeyValue::new(
+                    resource::PROCESS_PID,
+                    i64::from(std::process::id()),
+                ))
+                .with_attribute(KeyValue::new(
+                    resource::SERVICE_INSTANCE_ID,
+                    uuid::Uuid::new_v4().to_string(),
+                ))
                 .build(),
         )
         .build();
