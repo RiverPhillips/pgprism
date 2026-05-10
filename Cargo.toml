@@ -8,12 +8,17 @@ anyhow = "1.0.102"
 ctrlc = "3.5.2"
 futures = "0.3.32"
 local-sync = "0.1.1"
-monoio = "0.2.4"
+log = "0.4.29"
+monoio = { version = "0.2.4", features = ["macros"] }
+num_cpus = "1.17.0"
 opentelemetry = "0.31.0"
 opentelemetry-otlp = { version = "0.31.1" }
 opentelemetry-semantic-conventions = { version = "0.31.0", features = ["semconv_experimental"] }
 opentelemetry-stdout = "0.31.0"
 opentelemetry_sdk = "0.31.0"
+serde = { version = "1.0.228", features = ["derive"] }
+tokio-util = "0.7.18"
+toml = "1.1.2"
 uuid = { version = "1.23.1", features = ["v4"] }
 
 [lints.rust]

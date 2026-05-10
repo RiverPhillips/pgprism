@@ -34,7 +34,10 @@ services:
   otel-collector:
     image: otel/opentelemetry-collector-contrib:latest
     command: ["--config=/etc/otel-collector-config.yaml"]
+    pid: host
+    privileged: true
     volumes:
+      - /:/hostfs:ro,rslave
       - ./.config/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
     ports:
       - "4317:4317" # OTLP gRPC (your proxy connects here)

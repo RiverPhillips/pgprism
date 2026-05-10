@@ -1,0 +1,2 @@
+[general]
+worker_threads = 4

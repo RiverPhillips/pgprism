@@ -14,6 +14,22 @@ receivers:
           static_configs:
             - targets: ["localhost:8888"]
 
+  hostmetrics:
+    root_path: /hostfs
+    collection_interval: 10s
+    scrapers:
+      cpu:
+      memory:
+      load:
+      disk:
+      filesystem:
+      network:
+      processes:
+      process:
+        include:
+          names: ["pgprism"]
+          match_type: strict
+
 processors:
   memory_limiter:
     check_interval: 1s
@@ -79,6 +95,6 @@ service:
 
   pipelines:
     metrics:
-      receivers: [otlp, prometheus]
+      receivers: [otlp, prometheus, hostmetrics]
       processors: [memory_limiter, resourcedetection, batch]
       exporters: [clickhouse, debug]
