@@ -1,8 +1,10 @@
 use std::sync::Arc;
+use std::time::Duration;
 
 use crate::config::Config;
 use anyhow::{Context, Result};
-use monoio::io::{AsyncReadRent, AsyncWriteRentExt};
+use monoio::io::{AsyncReadRent, AsyncWriteRent, AsyncWriteRentExt, Splitable};
+use monoio::time;
 use monoio::{
     self,
     net::{ListenerOpts, TcpListener, TcpStream},
@@ -11,7 +13,7 @@ use std::thread::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
 pub fn run_workers(config: Arc<Config>, token: CancellationToken) -> Result<()> {
-    let worker_count = (&config).general.worker_threads;
+    let worker_count = (config).general.worker_threads;
     let mut handles = Vec::with_capacity(worker_count);
 
     for worker_id in 0..worker_count {
@@ -33,15 +35,17 @@ pub fn run_workers(config: Arc<Config>, token: CancellationToken) -> Result<()> 
 
                     loop {
                         monoio::select! {
+                            _ = time::sleep(Duration::from_millis(10)) => {
+                            }
                             _ = worker_token.cancelled() => {
                                 println!("Shutting down worker {}", worker_id);
                                 break;
                             }
-                            incoming = listener.accept() => {
-                                match incoming {
-                                    Ok((stream, addr)) => {
+                            downstream = listener.accept() => {
+                                match downstream {
+                                    Ok((downstream, addr)) => {
                                         println!("accepted a connection on worker {} from: {}", worker_id, addr);
-                                        monoio::spawn(echo(stream));
+                                        monoio::spawn(proxy(downstream));
                                     }
                                     Err(e) => {
                                         println!("accepted connection failed: {}", e);
@@ -88,18 +92,39 @@ fn join_workers(handles: Vec<JoinHandle<Result<()>>>) -> Result<()> {
     Ok(())
 }
 
-async fn echo(mut stream: TcpStream) -> Result<()> {
-    let mut buf: Vec<u8> = Vec::with_capacity(8 * 1024);
+async fn proxy(donwstream_conn: TcpStream) -> Result<()> {
+    let upstream_conn = TcpStream::connect("127.0.0.1:5432").await;
+    if let Ok(upstream_conn) = upstream_conn {
+        monoio::spawn(async move {
+            let (mut downstream_r, mut downstream_w) = donwstream_conn.into_split();
+            let (mut upstream_r, mut upstream_w) = upstream_conn.into_split();
+            let _ = monoio::join!(
+                copy_one_direction(&mut upstream_r, &mut downstream_w),
+                copy_one_direction(&mut downstream_r, &mut upstream_w),
+            );
+            println!("Finished copying")
+        });
+    } else {
+        eprintln!("upstream dial failed")
+    }
+    Ok(())
+}
+
+async fn copy_one_direction<FROM: AsyncReadRent, TO: AsyncWriteRent>(
+    mut from: FROM,
+    to: &mut TO,
+) -> Result<Vec<u8>, std::io::Error> {
+    let mut buf = Vec::with_capacity(8 * 1024);
     let mut res;
     loop {
         // read
-        (res, buf) = stream.read(buf).await;
+        (res, buf) = from.read(buf).await;
         if res? == 0 {
-            return Ok(());
+            return Ok(buf);
         }
 
         // write all
-        (res, buf) = stream.write_all(buf).await;
+        (res, buf) = to.write_all(buf).await;
         res?;
 
         // clear
