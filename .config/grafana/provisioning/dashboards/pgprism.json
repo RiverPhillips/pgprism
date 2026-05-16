@@ -1,0 +1,247 @@
+{
+  "uid": "g5jwsh",
+  "title": "PgPrism",
+  "schemaVersion": 42,
+  "version": 6,
+  "refresh": "",
+  "time": { "from": "now-15m", "to": "now" },
+  "timezone": "browser",
+  "timepicker": {
+    "refresh_intervals": ["5s", "10s", "30s", "1m", "5m", "15m", "30m", "1h", "2h", "1d"]
+  },
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "liveNow": false,
+  "preload": false,
+  "editable": true,
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": { "type": "grafana", "uid": "-- Grafana --" },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 5,
+      "panels": [],
+      "title": "Process",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "grafana-clickhouse-datasource", "uid": "PDEE91DDB90597936" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text",
+            "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "barWidthFactor": 0.6,
+            "drawStyle": "line", "fillOpacity": 0, "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5,
+            "scaleDistribution": { "log": 2, "type": "log" },
+            "showPoints": "auto", "showValues": false, "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }] },
+          "unit": "bytes"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 1 },
+      "id": 1,
+      "options": {
+        "annotations": { "clustering": -1, "multiLane": false },
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" }
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [
+        {
+          "datasource": { "type": "grafana-clickhouse-datasource", "uid": "PDEE91DDB90597936" },
+          "editorType": "sql", "format": 0,
+          "meta": { "builderOptions": { "columns": [], "database": "", "limit": 1000, "mode": "list", "queryType": "table", "table": "" } },
+          "pluginVersion": "4.17.0", "queryType": "timeseries",
+          "rawSql": "SELECT\n    TimeUnix AS time,\n    Value AS rss_bytes\nFROM otel.otel_metrics_sum\nWHERE $__timeFilter(TimeUnix)\n  AND MetricName = 'process.memory.usage'\n  AND ResourceAttributes['process.executable.name'] = 'pgprism'\nORDER BY time ASC",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "grafana-clickhouse-datasource", "uid": "PDEE91DDB90597936" },
+          "editorType": "sql", "format": 1,
+          "meta": { "builderOptions": { "columns": [], "database": "", "limit": 1000, "mode": "list", "queryType": "table", "table": "" } },
+          "pluginVersion": "4.17.0", "queryType": "table",
+          "rawSql": "SELECT\n    TimeUnix AS time,\n    Value AS virtual_bytes\nFROM otel.otel_metrics_sum\nWHERE $__timeFilter(TimeUnix)\n  AND MetricName = 'process.memory.virtual'\n  AND ResourceAttributes['process.executable.name'] = 'pgprism'\nORDER BY time ASC",
+          "refId": "B"
+        }
+      ],
+      "title": "Memory Usage",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "grafana-clickhouse-datasource", "uid": "PDEE91DDB90597936" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text",
+            "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "barWidthFactor": 0.6,
+            "drawStyle": "line", "fillOpacity": 0, "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto", "showValues": false, "spanNulls": false,
+            "stacking": { "group": "A", "mode": "normal" },
+            "thresholdsStyle": { "mode": "area" }
+          },
+          "max": 1, "min": 0,
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 0.8 }] },
+          "unit": "percentunit"
+        }
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 1 },
+      "id": 2,
+      "options": {
+        "annotations": { "clustering": -1, "multiLane": false },
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" }
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [
+        {
+          "datasource": { "type": "grafana-clickhouse-datasource", "uid": "PDEE91DDB90597936" },
+          "editorType": "sql", "format": 0,
+          "meta": { "builderOptions": { "columns": [], "database": "", "limit": 1000, "mode": "list", "queryType": "table", "table": "" } },
+          "pluginVersion": "4.17.0", "queryType": "timeseries",
+          "rawSql": "SELECT\n    toStartOfInterval(TimeUnix, INTERVAL 30 SECOND) AS time,\n    Attributes['state'] AS state,\n    (max(toFloat64(Value)) - min(toFloat64(Value))) / 30.0 AS cpu_seconds_per_sec\nFROM otel.otel_metrics_sum\nWHERE $__timeFilter(TimeUnix)\n  AND MetricName = 'process.cpu.time'\n  AND ResourceAttributes['process.executable.name'] = 'pgprism'\nGROUP BY time, state\nORDER BY time ASC, state ASC",
+          "refId": "A"
+        }
+      ],
+      "title": "CPU Usage",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 9 },
+      "id": 6,
+      "panels": [],
+      "title": "Connections",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "grafana-clickhouse-datasource", "uid": "PDEE91DDB90597936" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text",
+            "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "barWidthFactor": 0.6,
+            "drawStyle": "line", "fillOpacity": 0, "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto", "showValues": false, "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }] }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": ".*\\.active" },
+            "properties": [{ "id": "custom.axisPlacement", "value": "right" }]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 10 },
+      "id": 4,
+      "options": {
+        "annotations": { "clustering": -1, "multiLane": false },
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" }
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [
+        {
+          "datasource": { "type": "grafana-clickhouse-datasource", "uid": "PDEE91DDB90597936" },
+          "editorType": "sql", "format": 0,
+          "meta": { "builderOptions": { "columns": [], "database": "", "limit": 1000, "mode": "list", "queryType": "table", "table": "" } },
+          "pluginVersion": "4.17.0", "queryType": "timeseries",
+          "rawSql": "SELECT\n    TimeUnix AS time,\n    Value AS \"pgprism.downstream_connections.accepted\"\nFROM otel.otel_metrics_sum\nWHERE $__timeFilter(TimeUnix)\n  AND MetricName = 'pgprism.downstream_connections.accepted'\nORDER BY time ASC",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "grafana-clickhouse-datasource", "uid": "PDEE91DDB90597936" },
+          "editorType": "sql", "format": 0,
+          "meta": { "builderOptions": { "columns": [], "database": "", "limit": 1000, "mode": "list", "queryType": "table", "table": "" } },
+          "pluginVersion": "4.17.0", "queryType": "timeseries",
+          "rawSql": "SELECT\n    TimeUnix AS time,\n    Value AS \"pgprism.downstream_connections.active\"\nFROM otel.otel_metrics_sum\nWHERE $__timeFilter(TimeUnix)\n  AND MetricName = 'pgprism.downstream_connections.active'\nORDER BY time ASC",
+          "refId": "B"
+        }
+      ],
+      "title": "Downstream Connections",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "grafana-clickhouse-datasource", "uid": "PDEE91DDB90597936" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisBorderShow": false, "axisCenteredZero": false, "axisColorMode": "text",
+            "axisLabel": "", "axisPlacement": "auto", "barAlignment": 0, "barWidthFactor": 0.6,
+            "drawStyle": "line", "fillOpacity": 0, "gradientMode": "none",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "insertNulls": false, "lineInterpolation": "linear", "lineWidth": 1, "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "auto", "showValues": false, "spanNulls": false,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": 0 }, { "color": "red", "value": 80 }] }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "pgprism.upstream_connections.active" },
+            "properties": [{ "id": "custom.axisPlacement", "value": "right" }]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 10 },
+      "id": 7,
+      "options": {
+        "annotations": { "clustering": -1, "multiLane": false },
+        "legend": { "calcs": [], "displayMode": "list", "placement": "bottom", "showLegend": true },
+        "tooltip": { "hideZeros": false, "mode": "single", "sort": "none" }
+      },
+      "pluginVersion": "13.0.1",
+      "targets": [
+        {
+          "datasource": { "type": "grafana-clickhouse-datasource", "uid": "PDEE91DDB90597936" },
+          "editorType": "sql", "format": 0,
+          "meta": { "builderOptions": { "columns": [], "database": "", "limit": 1000, "mode": "list", "queryType": "table", "table": "" } },
+          "pluginVersion": "4.17.0", "queryType": "timeseries",
+          "rawSql": "SELECT\n    TimeUnix AS time,\n    Value AS \"pgprism.upstream_connections.established\"\nFROM otel.otel_metrics_sum\nWHERE $__timeFilter(TimeUnix)\n  AND MetricName = 'pgprism.upstream_connections.established'\nORDER BY time ASC",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "grafana-clickhouse-datasource", "uid": "PDEE91DDB90597936" },
+          "editorType": "sql", "format": 0,
+          "meta": { "builderOptions": { "columns": [], "database": "", "limit": 1000, "mode": "list", "queryType": "table", "table": "" } },
+          "pluginVersion": "4.17.0", "queryType": "timeseries",
+          "rawSql": "SELECT\n    TimeUnix AS time,\n    Value AS \"pgprism.upstream_connections.active\"\nFROM otel.otel_metrics_sum\nWHERE $__timeFilter(TimeUnix)\n  AND MetricName = 'pgprism.upstream_connections.active'\nORDER BY time ASC",
+          "refId": "B"
+        }
+      ],
+      "title": "Upstream Connections",
+      "type": "timeseries"
+    }
+  ]
+}

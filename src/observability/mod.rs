@@ -1,10 +1,12 @@
-use std::time::{Duration, Instant};
+use std::time::Duration;
 
 use anyhow::Result;
 use opentelemetry::{KeyValue, global};
 use opentelemetry_otlp::WithExportConfig;
 use opentelemetry_sdk::{Resource, metrics::SdkMeterProvider};
-use opentelemetry_semantic_conventions::{metric, resource};
+use opentelemetry_semantic_conventions::resource;
+
+pub mod metrics;
 
 pub struct Provider {
     meter_provider: opentelemetry_sdk::metrics::SdkMeterProvider,
@@ -13,7 +15,6 @@ pub struct Provider {
 impl Provider {
     pub fn new() -> Result<Self> {
         let meter_provider = build_meter_provider()?;
-        register_process_metrics();
         Ok(Self { meter_provider })
     }
 
@@ -49,18 +50,4 @@ fn build_meter_provider() -> Result<opentelemetry_sdk::metrics::SdkMeterProvider
         .build();
     global::set_meter_provider(provider.clone());
     Ok(provider)
-}
-
-fn register_process_metrics() {
-    let meter = global::meter("pgprism");
-    let start = Instant::now();
-
-    let _uptime_counter = meter
-        .f64_observable_gauge(metric::PROCESS_UPTIME)
-        .with_description("Uptime of the process")
-        .with_unit("s")
-        .with_callback(move |observer| {
-            observer.observe(start.elapsed().as_secs_f64(), &[]);
-        })
-        .build();
 }

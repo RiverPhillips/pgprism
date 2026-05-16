@@ -3,6 +3,9 @@ name = "pgprism"
 version = "0.1.0"
 edition = "2024"
 
+[profile.release]
+debug = true
+
 [dependencies]
 anyhow = "1.0.102"
 ctrlc = "3.5.2"
@@ -24,7 +27,6 @@ uuid = { version = "1.23.1", features = ["v4"] }
 [lints.rust]
 unsafe_code = "deny"
 unused_must_use = "deny"
-
 
 [lints.clippy]
 # Don't Panic
