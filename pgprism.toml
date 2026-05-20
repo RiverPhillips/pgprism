@@ -1,2 +1,6 @@
 [general]
 worker_threads = 4
+
+[downstream]
+listener_address = "0.0.0.0"
+listener_port = 50002

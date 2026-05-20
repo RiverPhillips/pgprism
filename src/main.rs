@@ -1,11 +1,19 @@
 use anyhow::{Context, Result};
+use clap::Parser;
 use opentelemetry::global;
-use std::time::Instant;
 use pgprism::config::Config;
 use pgprism::observability::metrics::Metrics;
 use pgprism::{observability, runtime};
+use std::path::Path;
 use std::sync::Arc;
+use std::time::Instant;
 use tokio_util::sync::CancellationToken;
+
+#[derive(Debug, Parser)]
+struct Args {
+    #[arg(long, default_value_t = String::from("pgprism.toml"), env)]
+    pub config_file: String,
+}
 
 fn main() -> Result<()> {
     let start_time = Instant::now();
@@ -15,7 +23,11 @@ fn main() -> Result<()> {
         token.cancel();
     })
     .context("failed to set signal handler")?;
-    let config = Arc::new(Config::default());
+
+    let args = Args::parse();
+
+    let config_path = Path::new(&args.config_file);
+    let config = Arc::new(Config::load(config_path)?);
 
     let observability_provider = observability::Provider::new()?;
     let meter = global::meter("pgprism");

@@ -24,7 +24,7 @@ pgprism is a **thread-per-core, shared-nothing Postgres proxy** built on [monoio
 
 **Connection distribution:** Each worker binds its own `TcpListener` on the same port with `SO_REUSEPORT`. The kernel hashes incoming connections across workers. A connection stays on the worker that accepted it for its entire lifetime — no work stealing, no cross-worker communication for per-connection state.
 
-**Proxy path:** downstream client → pgprism listener (`:50002`) → upstream Postgres (`127.0.0.1:5432`). Currently a raw TCP splice (`copy_one_direction`). The Postgres wire protocol is not yet parsed.
+**Proxy path:** downstream client → pgprism listener (address/port from `DownstreamConfig`) → upstream Postgres (`127.0.0.1:5432`). Currently a raw TCP splice (`copy_one_direction`). The Postgres wire protocol is not yet parsed.
 
 **Cross-worker coordination (explicit seams only):**
 - `Arc<Config>` — cloned at startup, immutable for process lifetime (TOML-parsed, static config)
@@ -39,8 +39,11 @@ pgprism is a **thread-per-core, shared-nothing Postgres proxy** built on [monoio
 
 Each accepted connection is already running in its own spawned task (from the accept loop). `proxy()` should `await` the bidirectional copy directly rather than spawning an inner task — an inner spawn causes `proxy()` to return immediately, which fires any post-proxy cleanup (metric decrements, resource drops) before the connection actually closes.
 
+Config struct fields should use semantic types rather than `String` — e.g. `IpAddr` for addresses. Serde deserializes these natively from TOML strings, and `const` values (e.g. `IpAddr::V4(Ipv4Addr::new(...))`) can serve as defaults without any runtime parsing or `.unwrap()`.
+
 **Module layout:**
-- `src/config.rs` — `Config` / `General` structs, TOML-deserializable
+- `src/config.rs` — `Config` / `General` / `DownstreamConfig` structs, TOML-deserializable
+- `src/error.rs` — `Error` enum, thiserror-backed; covers config I/O and parse errors
 - `src/runtime/worker.rs` — `Worker`, `run_workers`, `proxy`, `copy_one_direction`
 - `src/observability/mod.rs` — OTel provider setup and shutdown
 - `src/observability/metrics.rs` — all instrument definitions

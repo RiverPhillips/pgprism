@@ -15,12 +15,17 @@ use tokio_util::sync::CancellationToken;
 
 struct Worker {
     metrics: Arc<Metrics>,
+    config: Arc<Config>,
     id: usize,
 }
 
 impl Worker {
-    pub fn new(metrics: Arc<Metrics>, id: usize) -> Self {
-        Self { metrics, id }
+    pub fn new(metrics: Arc<Metrics>, config: Arc<Config>, id: usize) -> Self {
+        Self {
+            metrics,
+            id,
+            config,
+        }
     }
 
     pub fn run(self, worker_token: CancellationToken) -> Result<()> {
@@ -34,7 +39,11 @@ impl Worker {
 
                     let listener_opts = ListenerOpts::new().reuse_port(true);
 
-                    let listener = TcpListener::bind_with_config("0.0.0.0:50002", &listener_opts).context("Failed to bind")?;
+                    let listener = TcpListener::bind_with_config(
+                        (self.config.downstream.listener_address, self.config.downstream.listener_port),
+                        &listener_opts,
+                    )
+                    .context("Failed to bind")?;
 
                     loop {
                         monoio::select! {
@@ -99,7 +108,7 @@ pub fn run_workers(
     let mut handles = Vec::with_capacity(worker_count);
 
     for id in 0..worker_count {
-        let worker = Worker::new(metrics.clone(), id);
+        let worker = Worker::new(metrics.clone(), config.clone(), id);
         let worker_token = token.clone();
         let handle = std::thread::Builder::new()
             .name(format!("pgprism-worker-{id}"))
